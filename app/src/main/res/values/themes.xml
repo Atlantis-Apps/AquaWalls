@@ -1,9 +1,12 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Base AtlantisOS Theme -->
     <style name="Theme.Material3.DayNight.NoActionBar" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize Atlantis colors -->
-        <item name="colorPrimary">@android:color/holo_blue_dark</item>
-        <item name="colorSecondary">@android:color/holo_blue_light</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorOnPrimary">@color/colorOnPrimary</item>
+        <item name="colorSecondary">@color/colorSecondary</item>
+        <item name="colorOnSecondary">@color/colorOnSecondary</item>
+        <item name="android:statusBarColor">@color/colorPrimary</item>
     </style>
 
 </resources>
