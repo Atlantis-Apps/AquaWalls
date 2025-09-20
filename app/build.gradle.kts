@@ -22,7 +22,16 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.14"
     }
+   
+    // Force Java 17 for both Kotlin + Java
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 
+    kotlinOptions {
+        jvmTarget = "17"
+    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
