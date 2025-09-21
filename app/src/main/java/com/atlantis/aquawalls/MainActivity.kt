@@ -96,7 +96,7 @@ fun WallpaperGrid(navController: androidx.navigation.NavHostController) {
                             .crossfade(true)
                             .build(),
                         contentDescription = null,
-                        contentScale = ContentScale.Crop,
+                        contentScale = ContentScale.Crop, // grid stays cropped for nice look
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -126,7 +126,7 @@ fun WallpaperPreview(url: String, navController: androidx.navigation.NavHostCont
                 .crossfade(true)
                 .build(),
             contentDescription = null,
-            contentScale = ContentScale.Crop,
+            contentScale = ContentScale.Fit,
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
