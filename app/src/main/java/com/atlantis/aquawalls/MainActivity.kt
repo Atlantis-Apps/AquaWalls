@@ -58,9 +58,14 @@ fun WallpaperGrid(navController: androidx.navigation.NavHostController) {
     val api = remember { WallpaperApi.create() }
     var wallpapers by remember { mutableStateOf(emptyList<String>()) }
 
-    // ✅ Safe suspend call in coroutine context
     LaunchedEffect(Unit) {
-        wallpapers = api.getWallpapers().wallpapers
+        try {
+            val result = api.getWallpapers()
+            wallpapers = result.wallpapers
+        } catch (e: Exception) {
+            e.printStackTrace()
+            wallpapers = emptyList() 
+        }
     }
 
     Scaffold(
