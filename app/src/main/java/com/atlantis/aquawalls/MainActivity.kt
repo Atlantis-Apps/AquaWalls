@@ -29,6 +29,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import java.net.URLEncoder
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,8 +48,9 @@ fun AquaWallsApp() {
     NavHost(navController = navController, startDestination = "grid") {
         composable("grid") { WallpaperGrid(navController) }
         composable("preview/{url}") { backStackEntry ->
-            backStackEntry.arguments?.getString("url")?.let {
-                WallpaperPreview(it, navController)
+            backStackEntry.arguments?.getString("url")?.let { encoded ->
+                val decoded = URLDecoder.decode(encoded, StandardCharsets.UTF_8.toString())
+                WallpaperPreview(decoded, navController)
             }
         }
     }
@@ -58,13 +62,14 @@ fun WallpaperGrid(navController: androidx.navigation.NavHostController) {
     val api = remember { WallpaperApi.create() }
     var wallpapers by remember { mutableStateOf(emptyList<String>()) }
 
+    // ✅ Safe API call with error handling
     LaunchedEffect(Unit) {
         try {
             val result = api.getWallpapers()
             wallpapers = result.wallpapers
         } catch (e: Exception) {
             e.printStackTrace()
-            wallpapers = emptyList() 
+            wallpapers = emptyList() // avoid crash if API fails
         }
     }
 
@@ -80,7 +85,10 @@ fun WallpaperGrid(navController: androidx.navigation.NavHostController) {
                     modifier = Modifier
                         .padding(8.dp)
                         .fillMaxWidth()
-                        .clickable { navController.navigate("preview/$url") }
+                        .clickable {
+                            val encoded = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
+                            navController.navigate("preview/$encoded")
+                        }
                 ) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
