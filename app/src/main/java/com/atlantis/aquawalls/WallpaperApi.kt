@@ -1,25 +1,33 @@
 package com.atlantis.aquawalls
 
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.GET
+import android.content.Context
 
-// Data model
-data class WallpaperResponse(val wallpapers: List<String>)
+data class Wallpaper(
+    val name: String,
+    val assetPath: String
+)
 
-// Retrofit interface
-interface WallpaperApi {
-    @GET("wallpapers.json") // Replace with your actual file path
-    suspend fun getWallpapers(): WallpaperResponse
+object WallpaperApi {
+    fun getWallpapers(context: Context): List<Wallpaper> {
+        val assetManager = context.assets
+        val wallpapers = mutableListOf<Wallpaper>()
 
-    companion object {
-        fun create(): WallpaperApi {
-            return Retrofit.Builder()
-                .baseUrl("https://raw.githubusercontent.com/Atlantis-Apps/AquaWalls/main/") 
-                // Change to your GitHub repo where wallpapers.json lives
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-                .create(WallpaperApi::class.java)
+        try {
+            val files = assetManager.list("wallpapers")
+            files?.forEach { file ->
+                if (file.endsWith(".png") || file.endsWith(".jpg") || file.endsWith(".jpeg")) {
+                    wallpapers.add(
+                        Wallpaper(
+                            name = file.substringBeforeLast('.'),
+                            assetPath = "file:///android_asset/wallpapers/$file"
+                        )
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
+
+        return wallpapers
     }
 }
