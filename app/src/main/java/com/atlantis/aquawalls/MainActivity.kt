@@ -59,9 +59,9 @@ fun AquaWallsApp() {
 @Composable
 fun WallpaperListScreen(navController: NavController) {
     val wallpapers = listOf(
-        Wallpaper("Atlantis Hex", "wallpapers/hex1.png"),
-        Wallpaper("Deep Sea City", "wallpapers/deepsea.png"),
-        Wallpaper("Blue Energy Flow", "wallpapers/energy.png")
+        Wallpaper("Atlantis Hex", "wallpapers/wall2.png"),
+        Wallpaper("Deep Sea City", "wallpapers/wall1.png"),
+        Wallpaper("Blue Energy Flow", "wallpapers/wall3.png")
     )
 
     Scaffold(
