@@ -1,6 +1,7 @@
 package com.atlantis.aquawalls
 
 import android.app.WallpaperManager
+import android.widget.Toast
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -30,7 +31,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import java.io.InputStream
 
-// Wallpaper data
 data class Wallpaper(
     val name: String,
     val assetPath: String
@@ -92,7 +92,7 @@ fun WallpaperListScreen(navController: NavController) {
                         .clickable {
                             navController.navigate("preview/${Uri.encode(wallpaper.assetPath)}")
                         },
-                    elevation = CardDefaults.cardElevation(4.dp)
+                    elevation = CardDefaults.cardElevation(6.dp)
                 ) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
@@ -106,7 +106,6 @@ fun WallpaperListScreen(navController: NavController) {
                             .height(200.dp)
                             .fillMaxWidth()
                     )
-
                     Text(
                         text = wallpaper.name,
                         style = MaterialTheme.typography.bodyMedium,
@@ -127,7 +126,7 @@ fun PreviewScreen(assetPath: String, navController: NavController) {
     val wallpaperManager = WallpaperManager.getInstance(context)
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Show the wallpaper fullscreen
+        // Fullscreen preview
         AsyncImage(
             model = ImageRequest.Builder(context)
                 .data(imageUri)
@@ -160,16 +159,23 @@ fun PreviewScreen(assetPath: String, navController: NavController) {
                 try {
                     val inputStream: InputStream = context.assets.open(assetPath)
                     wallpaperManager.setStream(inputStream)
+                    Toast.makeText(context, "Wallpaper applied successfully!", Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
+                    Toast.makeText(context, "Failed to set wallpaper.", Toast.LENGTH_SHORT).show()
                     e.printStackTrace()
                 }
             },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0A4D9C)),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF0A4D9C),
+                contentColor = Color.White
+            ),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 40.dp)
+                .height(50.dp)
+                .width(200.dp)
         ) {
-            Text("Set Wallpaper", color = Color.White)
+            Text("Set Wallpaper")
         }
     }
 }
