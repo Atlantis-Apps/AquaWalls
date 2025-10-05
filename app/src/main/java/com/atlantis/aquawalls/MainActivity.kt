@@ -1,6 +1,7 @@
 package com.atlantis.aquawalls
 
 import android.app.WallpaperManager
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
@@ -29,6 +30,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 
 data class Wallpaper(
     val name: String,
@@ -48,11 +52,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AquaWallsApp() {
     val navController = rememberNavController()
-
     NavHost(navController = navController, startDestination = "home") {
-        composable("home") {
-            WallpaperListScreen(navController)
-        }
+        composable("home") { WallpaperListScreen(navController) }
         composable("preview/{assetPath}") { backStackEntry ->
             val assetPath = backStackEntry.arguments?.getString("assetPath") ?: ""
             PreviewScreen(assetPath = assetPath, navController = navController)
@@ -119,7 +120,7 @@ fun WallpaperListScreen(navController: NavController) {
 @Composable
 fun PreviewScreen(assetPath: String, navController: NavController) {
     val context = LocalContext.current
-    val imageUri = Uri.parse("file:///android_asset/$assetPath")
+    val imageUri = "file:///android_asset/$assetPath"
 
     Box(modifier = Modifier.fillMaxSize()) {
         AsyncImage(
@@ -132,7 +133,6 @@ fun PreviewScreen(assetPath: String, navController: NavController) {
             contentScale = ContentScale.Crop
         )
 
-        // Back button
         IconButton(
             onClick = { navController.popBackStack() },
             modifier = Modifier
@@ -147,37 +147,37 @@ fun PreviewScreen(assetPath: String, navController: NavController) {
             )
         }
 
-        // Apply wallpaper button
         Button(
             onClick = {
-                try {
-                    val inputStream = context.assets.open(assetPath)
-                    val tempFile = java.io.File(context.cacheDir, "temp_wallpaper.png")
-                    tempFile.outputStream().use { output ->
-                        inputStream.copyTo(output)
-                    }
-
-                    val intent = WallpaperManager.getInstance(context)
-                        .getCropAndSetWallpaperIntent(Uri.fromFile(tempFile))
-                    context.startActivity(intent)
-
-                    Toast.makeText(context, "Opening wallpaper picker...", Toast.LENGTH_SHORT).show()
-                } catch (e: Exception) {
-                    Toast.makeText(context, "Error applying wallpaper", Toast.LENGTH_SHORT).show()
-                    e.printStackTrace()
-                }
+                applyWallpaperFromAssets(context, assetPath)
             },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF0A4D9C),
-                contentColor = Color.White
-            ),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 40.dp)
-                .height(50.dp)
-                .width(220.dp)
+                .padding(24.dp)
         ) {
             Text("Apply Wallpaper")
         }
+    }
+}
+
+/**
+ * Safely copies an image from assets to cache and applies it as wallpaper
+ */
+fun applyWallpaperFromAssets(context: Context, assetPath: String) {
+    try {
+        val wallpaperManager = WallpaperManager.getInstance(context)
+        val inputStream: InputStream = context.assets.open(assetPath)
+        val cacheFile = File(context.cacheDir, "temp_wallpaper.png")
+        FileOutputStream(cacheFile).use { output ->
+            inputStream.copyTo(output)
+        }
+        inputStream.close()
+        val uri = Uri.fromFile(cacheFile)
+        val bitmap = android.graphics.BitmapFactory.decodeFile(uri.path)
+        wallpaperManager.setBitmap(bitmap)
+        Toast.makeText(context, "Wallpaper applied successfully!", Toast.LENGTH_SHORT).show()
+    } catch (e: Exception) {
+        e.printStackTrace()
+        Toast.makeText(context, "Error applying wallpaper", Toast.LENGTH_SHORT).show()
     }
 }
