@@ -1,9 +1,9 @@
 package com.atlantis.aquawalls
 
 import android.app.WallpaperManager
-import android.widget.Toast
 import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -29,7 +29,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import java.io.InputStream
 
 data class Wallpaper(
     val name: String,
@@ -92,23 +91,21 @@ fun WallpaperListScreen(navController: NavController) {
                         .clickable {
                             navController.navigate("preview/${Uri.encode(wallpaper.assetPath)}")
                         },
-                    elevation = CardDefaults.cardElevation(6.dp)
+                    elevation = CardDefaults.cardElevation(4.dp)
                 ) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data("file:///android_asset/${wallpaper.assetPath}")
-                            .allowHardware(false)
                             .crossfade(true)
                             .build(),
                         contentDescription = wallpaper.name,
-                        contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .height(200.dp)
-                            .fillMaxWidth()
+                            .fillMaxWidth(),
+                        contentScale = ContentScale.Crop
                     )
                     Text(
                         text = wallpaper.name,
-                        style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier
                             .padding(12.dp)
                             .align(Alignment.CenterHorizontally)
@@ -122,15 +119,12 @@ fun WallpaperListScreen(navController: NavController) {
 @Composable
 fun PreviewScreen(assetPath: String, navController: NavController) {
     val context = LocalContext.current
-    val imageUri = "file:///android_asset/$assetPath"
-    val wallpaperManager = WallpaperManager.getInstance(context)
+    val imageUri = Uri.parse("file:///android_asset/$assetPath")
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Fullscreen preview
         AsyncImage(
             model = ImageRequest.Builder(context)
                 .data(imageUri)
-                .allowHardware(false)
                 .crossfade(true)
                 .build(),
             contentDescription = null,
@@ -153,15 +147,23 @@ fun PreviewScreen(assetPath: String, navController: NavController) {
             )
         }
 
-        // Set Wallpaper button
+        // Apply wallpaper button
         Button(
             onClick = {
                 try {
-                    val inputStream: InputStream = context.assets.open(assetPath)
-                    wallpaperManager.setStream(inputStream)
-                    Toast.makeText(context, "Wallpaper applied successfully!", Toast.LENGTH_SHORT).show()
+                    val inputStream = context.assets.open(assetPath)
+                    val tempFile = java.io.File(context.cacheDir, "temp_wallpaper.png")
+                    tempFile.outputStream().use { output ->
+                        inputStream.copyTo(output)
+                    }
+
+                    val intent = WallpaperManager.getInstance(context)
+                        .getCropAndSetWallpaperIntent(Uri.fromFile(tempFile))
+                    context.startActivity(intent)
+
+                    Toast.makeText(context, "Opening wallpaper picker...", Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
-                    Toast.makeText(context, "Failed to set wallpaper.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Error applying wallpaper", Toast.LENGTH_SHORT).show()
                     e.printStackTrace()
                 }
             },
@@ -173,9 +175,9 @@ fun PreviewScreen(assetPath: String, navController: NavController) {
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 40.dp)
                 .height(50.dp)
-                .width(200.dp)
+                .width(220.dp)
         ) {
-            Text("Set Wallpaper")
+            Text("Apply Wallpaper")
         }
     }
 }
