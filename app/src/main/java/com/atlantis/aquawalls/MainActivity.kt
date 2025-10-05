@@ -4,7 +4,6 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,10 +11,11 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,9 +38,7 @@ data class Wallpaper(
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            AquaWallsApp()
-        }
+        setContent { AquaWallsApp() }
     }
 }
 
@@ -49,9 +47,7 @@ fun AquaWallsApp() {
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = "home") {
-        composable("home") {
-            WallpaperListScreen(navController)
-        }
+        composable("home") { WallpaperListScreen(navController) }
         composable("preview/{assetPath}") { backStackEntry ->
             val assetPath = backStackEntry.arguments?.getString("assetPath") ?: ""
             PreviewScreen(assetPath = assetPath, navController = navController)
@@ -90,25 +86,36 @@ fun WallpaperListScreen(navController: NavController) {
                         .clickable {
                             navController.navigate("preview/${Uri.encode(wallpaper.assetPath)}")
                         },
-                    elevation = CardDefaults.cardElevation(4.dp)
+                    elevation = CardDefaults.cardElevation(6.dp),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data("file:///android_asset/${wallpaper.assetPath}")
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = wallpaper.name,
-                        modifier = Modifier
-                            .height(200.dp)
-                            .fillMaxWidth(),
-                        contentScale = ContentScale.Crop
-                    )
-                    Text(
-                        text = wallpaper.name,
-                        modifier = Modifier
-                            .padding(12.dp)
-                            .align(Alignment.CenterHorizontally)
-                    )
+                    Box {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data("file:///android_asset/${wallpaper.assetPath}")
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = wallpaper.name,
+                            modifier = Modifier
+                                .height(200.dp)
+                                .fillMaxWidth(),
+                            contentScale = ContentScale.Crop
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.Black.copy(alpha = 0.4f))
+                                .align(Alignment.BottomCenter)
+                                .padding(8.dp)
+                        ) {
+                            Text(
+                                text = wallpaper.name,
+                                color = Color.White,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                    }
                 }
             }
         }
