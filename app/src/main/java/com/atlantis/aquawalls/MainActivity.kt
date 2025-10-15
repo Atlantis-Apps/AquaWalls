@@ -166,18 +166,22 @@ fun PreviewScreen(assetPath: String, navController: NavController) {
 fun applyWallpaperFromAssets(context: Context, assetPath: String) {
     try {
         val wallpaperManager = WallpaperManager.getInstance(context)
+
+        // Load bitmap directly from assets
         val inputStream: InputStream = context.assets.open(assetPath)
-        val cacheFile = File(context.cacheDir, "temp_wallpaper.png")
-        FileOutputStream(cacheFile).use { output ->
-            inputStream.copyTo(output)
-        }
+        val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
         inputStream.close()
-        val uri = Uri.fromFile(cacheFile)
-        val bitmap = android.graphics.BitmapFactory.decodeFile(uri.path)
+
+        // Apply wallpaper
         wallpaperManager.setBitmap(bitmap)
         Toast.makeText(context, "Wallpaper applied successfully!", Toast.LENGTH_SHORT).show()
+
     } catch (e: Exception) {
+        Toast.makeText(
+            context,
+            "Error applying wallpaper: ${e.message ?: e.toString()}",
+            Toast.LENGTH_LONG
+        ).show()
         e.printStackTrace()
-        Toast.makeText(context, "Error applying wallpaper", Toast.LENGTH_SHORT).show()
     }
 }
