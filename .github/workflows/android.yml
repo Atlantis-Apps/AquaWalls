@@ -1,10 +1,9 @@
-name: Android CI
+name: Android Release CI
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    tags:
+      - "v*"
 
 jobs:
   build:
@@ -23,14 +22,43 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v3
 
-      - name: Grant execute permission for gradlew
+      - name: Decode keystore
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > app/aquawalls.keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+
+      - name: Grant execute permission
         run: chmod +x gradlew
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
+      - name: Build signed APK
+        run: ./gradlew assembleRelease
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Upload APK artifact
+      - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AquaWalls-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: AquaWalls-release
+          path: app/build/outputs/apk/release/app-release.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: app/build/outputs/apk/release/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Post release to Telegram
+        run: |
+          APK_PATH="app/build/outputs/apk/release/app-release.apk"
+          MESSAGE="🌊 *New AquaWalls Release!*%0A📦 Version: ${GITHUB_REF_NAME}%0A🔥 AtlantisOS Integration Complete!"
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+              -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+              -d text="$MESSAGE" \
+              -d parse_mode="Markdown"
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" \
+              -F chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+              -F document=@${APK_PATH}
