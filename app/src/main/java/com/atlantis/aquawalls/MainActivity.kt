@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -35,7 +36,10 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 
-data class Wallpaper(val name: String, val assetPath: String)
+data class Wallpaper(
+    val name: String,
+    val assetPath: String
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
@@ -58,6 +62,7 @@ fun AquaWallsApp() {
             val assetPath = backStackEntry.arguments?.getString("assetPath") ?: ""
             PreviewScreen(assetPath = assetPath, navController = navController)
         }
+        composable("changelog") { ChangelogScreen(navController) }
     }
 }
 
@@ -74,6 +79,15 @@ fun WallpaperListScreen(navController: NavController) {
         topBar = {
             TopAppBar(
                 title = { Text("AquaWalls") },
+                actions = {
+                    IconButton(onClick = { navController.navigate("changelog") }) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Changelog",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
                     titleContentColor = MaterialTheme.colorScheme.onSurface
