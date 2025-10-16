@@ -5,6 +5,9 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write  # Needed for GitHub release creation
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,6 +25,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v3
 
+      # 🧩 Decode the Base64 keystore file from secrets
       - name: Decode keystore
         run: |
           echo "$KEYSTORE_BASE64" | base64 --decode > app/aquawalls.keystore
@@ -31,6 +35,7 @@ jobs:
       - name: Grant execute permission
         run: chmod +x gradlew
 
+      # 🧱 Build signed release APK
       - name: Build signed APK
         run: ./gradlew assembleRelease
         env:
@@ -38,19 +43,31 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
+      # 📦 Upload built APK to workflow artifacts
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
           name: AquaWalls-release
           path: app/build/outputs/apk/release/app-release.apk
 
+      # 🚀 Create GitHub Release with APK attachment
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: app/build/outputs/apk/release/app-release.apk
+          name: AquaWalls ${{ github.ref_name }}
+          body: |
+            🌊 **AquaWalls ${{ github.ref_name }} Released!**
+            ---
+            ✅ Material You Atlantis theme  
+            ✅ Wallpaper apply support  
+            ✅ Icon and design revamp  
+            ✅ Built-in changelog  
+            ✅ Bug fixes & improvements
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # 📱 Post release message and APK to Telegram
       - name: Post release to Telegram
         run: |
           APK_PATH="app/build/outputs/apk/release/app-release.apk"
