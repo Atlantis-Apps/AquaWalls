@@ -30,21 +30,21 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.atlantis.aquawalls.ui.theme.AquaWallsTheme
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 
-data class Wallpaper(
-    val name: String,
-    val assetPath: String
-)
+data class Wallpaper(val name: String, val assetPath: String)
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            AquaWallsApp()
+            AquaWallsTheme {
+                AquaWallsApp()
+            }
         }
     }
 }
@@ -73,8 +73,11 @@ fun WallpaperListScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("AquaWalls", color = Color.White) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0A4D9C))
+                title = { Text("AquaWalls") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         }
     ) { padding ->
@@ -83,6 +86,7 @@ fun WallpaperListScreen(navController: NavController) {
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
         ) {
             items(wallpapers) { wallpaper ->
                 Card(
@@ -92,7 +96,10 @@ fun WallpaperListScreen(navController: NavController) {
                         .clickable {
                             navController.navigate("preview/${Uri.encode(wallpaper.assetPath)}")
                         },
-                    elevation = CardDefaults.cardElevation(4.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+                    )
                 ) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
@@ -109,7 +116,8 @@ fun WallpaperListScreen(navController: NavController) {
                         text = wallpaper.name,
                         modifier = Modifier
                             .padding(12.dp)
-                            .align(Alignment.CenterHorizontally)
+                            .align(Alignment.CenterHorizontally),
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -148,34 +156,33 @@ fun PreviewScreen(assetPath: String, navController: NavController) {
         }
 
         Button(
-            onClick = {
-                applyWallpaperFromAssets(context, assetPath)
-            },
+            onClick = { applyWallpaperFromAssets(context, assetPath) },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(24.dp)
+                .padding(24.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
         ) {
             Text("Apply Wallpaper")
         }
     }
 }
 
-/**
- * Safely copies an image from assets to cache and applies it as wallpaper
- */
 fun applyWallpaperFromAssets(context: Context, assetPath: String) {
     try {
         val wallpaperManager = WallpaperManager.getInstance(context)
-
-        // Load bitmap directly from assets
         val inputStream: InputStream = context.assets.open(assetPath)
-        val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+        val cacheFile = File(context.cacheDir, "temp_wallpaper.png")
+        FileOutputStream(cacheFile).use { output ->
+            inputStream.copyTo(output)
+        }
         inputStream.close()
-
-        // Apply wallpaper
+        val uri = Uri.fromFile(cacheFile)
+        val bitmap = android.graphics.BitmapFactory.decodeFile(uri.path)
         wallpaperManager.setBitmap(bitmap)
         Toast.makeText(context, "Wallpaper applied successfully!", Toast.LENGTH_SHORT).show()
-
     } catch (e: Exception) {
         Toast.makeText(
             context,
