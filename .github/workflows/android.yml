@@ -6,7 +6,7 @@ on:
       - "v*"
 
 permissions:
-  contents: write  # Needed for GitHub release creation
+  contents: write  # Required to publish GitHub releases
 
 jobs:
   build:
@@ -25,7 +25,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v3
 
-      # 🧩 Decode the Base64 keystore file from secrets
+      # 🧩 Decode Base64 keystore from GitHub Secrets
       - name: Decode keystore
         run: |
           echo "$KEYSTORE_BASE64" | base64 --decode > app/aquawalls.keystore
@@ -43,18 +43,31 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      # 📦 Upload built APK to workflow artifacts
+      # 🪄 Rename APK to versioned name (for clarity)
+      - name: Rename release APK
+        run: |
+          mkdir -p release
+          if [ -f "app/build/outputs/apk/release/app-release.apk" ]; then
+            mv app/build/outputs/apk/release/app-release.apk release/AquaWalls-${GITHUB_REF_NAME}.apk
+          elif [ -f "app/build/outputs/apk/release/app-release-unsigned.apk" ]; then
+            mv app/build/outputs/apk/release/app-release-unsigned.apk release/AquaWalls-${GITHUB_REF_NAME}.apk
+          else
+            echo "❌ No APK found!"; exit 1;
+          fi
+          ls -lh release
+
+      # 📦 Upload release artifact
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
           name: AquaWalls-release
-          path: app/build/outputs/apk/release/app-release.apk
+          path: release/AquaWalls-${{ github.ref_name }}.apk
 
-      # 🚀 Create GitHub Release with APK attachment
+      # 🚀 Create GitHub Release
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/release/app-release.apk
+          files: release/AquaWalls-${{ github.ref_name }}.apk
           name: AquaWalls ${{ github.ref_name }}
           body: |
             🌊 **AquaWalls ${{ github.ref_name }} Released!**
@@ -71,7 +84,7 @@ jobs:
       - name: Post release to Telegram
         shell: bash
         run: |
-          APK_PATH="app/build/outputs/apk/release/app-release.apk"
+          APK_PATH="release/AquaWalls-${GITHUB_REF_NAME}.apk"
           MESSAGE="🌊 *New AquaWalls Release!*%0A📦 Version: ${GITHUB_REF_NAME}%0A🔥 AtlantisOS Integration Complete!%0A[⬇️ Download on GitHub](https://github.com/${{ github.repository }}/releases/tag/${GITHUB_REF_NAME})"
 
           echo "Sending Telegram message..."
