@@ -22,8 +22,8 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.14"
     }
-   
-    // Force Java 17 for both Kotlin + Java
+
+    // ✅ Java 17 support
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -32,9 +32,33 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+
+    // ✅ Release signing setup for CI
+    signingConfigs {
+        create("release") {
+            storeFile = file("aquawalls.keystore")
+            storePassword = System.getenv("KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("KEY_ALIAS")
+            keyPassword = System.getenv("KEY_PASSWORD")
+        }
+    }
+
+    // ✅ Build types (signed release)
+    buildTypes {
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = false
+            isShrinkResources = false
+            isDebuggable = false
+        }
+        getByName("debug") {
+            isDebuggable = true
         }
     }
 }
@@ -63,6 +87,6 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
 
-    // Optional: classic Material library (for XML themes)
+    // Optional: Material Components (for XML themes if needed)
     implementation("com.google.android.material:material:1.12.0")
 }
