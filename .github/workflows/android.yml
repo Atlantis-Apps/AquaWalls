@@ -69,23 +69,24 @@ jobs:
 
       # 📱 Post release message and APK to Telegram
       - name: Post release to Telegram
-  run: |
-    APK_PATH="app/build/outputs/apk/release/app-release.apk"
-    MESSAGE="🌊 *New AquaWalls Release!*%0A📦 Version: ${GITHUB_REF_NAME}%0A🔥 AtlantisOS Integration Complete!%0A[⬇️ Download on GitHub](https://github.com/${{ github.repository }}/releases/tag/${GITHUB_REF_NAME})"
+        shell: bash
+        run: |
+          APK_PATH="app/build/outputs/apk/release/app-release.apk"
+          MESSAGE="🌊 *New AquaWalls Release!*%0A📦 Version: ${GITHUB_REF_NAME}%0A🔥 AtlantisOS Integration Complete!%0A[⬇️ Download on GitHub](https://github.com/${{ github.repository }}/releases/tag/${GITHUB_REF_NAME})"
 
-    echo "Sending Telegram message..."
-    curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-        -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
-        -d text="$MESSAGE" \
-        -d parse_mode="Markdown"
+          echo "Sending Telegram message..."
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+              -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+              -d text="$MESSAGE" \
+              -d parse_mode="Markdown"
 
-    echo "Uploading APK to Telegram..."
-    if [ -f "$APK_PATH" ]; then
-      curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" \
-          -F chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
-          -F caption="📱 AquaWalls ${GITHUB_REF_NAME} – Download below!" \
-          -F document=@${APK_PATH}
-    else
-      echo "⚠️ APK not found at $APK_PATH"
-      exit 1
-    fi
+          echo "Uploading APK to Telegram..."
+          if [ -f "$APK_PATH" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" \
+                -F chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+                -F caption="📱 AquaWalls ${GITHUB_REF_NAME} – Download below!" \
+                -F document=@${APK_PATH}
+          else
+            echo "⚠️ APK not found at $APK_PATH"
+            exit 1
+          fi
